@@ -69,6 +69,10 @@ var Core = (function(){
      * @param {string} name
      */
     core.load = function(name, options){
+        if(options === undefined || typeof(options) !== 'object'){
+            options = {};
+        }
+        
         if(currentController !== null && currentController.getName() === name){
             return false;
         }
@@ -86,7 +90,7 @@ var Core = (function(){
                     $('head').append(script);
                 }catch(error){
                     // Не удалось загрузить контроллер
-                    if(typeof(options.onError) === 'function'){
+                    if(options.onError !== undefined && typeof(options.onError) === 'function'){
                         options.onError.apply(null, [error]);
                     }
 
@@ -102,10 +106,10 @@ var Core = (function(){
                     var continueLoading = function(name, options, controller){
                         currentController = controller;
                         if(controller.init !== undefined && typeof(controller.init) === 'function'){
-                            controller.init.apply(controller, [core]);
+                            controller.init.apply(controller, []);
                         }
                         
-                        if(typeof(options.after) === 'function'){
+                        if(options.after !== undefined && typeof(options.after) === 'function'){
                             options.after.apply(null, []);
                         }
                     }
@@ -132,12 +136,25 @@ var Core = (function(){
         }
         load = load.bind(core, name, options);
 
-        if(typeof(options.before) === 'function'){
+        if(options.before !== undefined && typeof(options.before) === 'function'){
             options.before.apply(null, [load]);
         }else{
             load();
         }
     };
+
+    core.view = function(file, onload){
+        $.ajax({
+            type: 'GET',
+            url: 'views/' + file + '.html',
+            success: function(html){
+                $applicationContainer.html(html);
+                if(onload !== undefined && typeof(onload) === 'function'){
+                    onload();
+                }
+            }
+        });
+    }
 
     // ---
 
