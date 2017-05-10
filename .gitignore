@@ -1,0 +1,8 @@
+plugins
+typings
+platforms
+hooks
+.vscode
+build.json
+jsconfig.json
+*.keystore
