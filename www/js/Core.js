@@ -105,6 +105,10 @@ var Core = (function(){
      * Определяет контроллер, если он ещё не определён
      */
     core.defineController = function(name, controllerObj){
+        if(controllerObj !== undefined && typeof(controllerObj) === 'function'){
+            controllerObj = controllerObj.apply(null, []);
+        }
+
         if(controllerObj === undefined || typeof(controllerObj) !== 'object'){
             throw new Error('controllerObj must be an object');
         }
@@ -125,6 +129,7 @@ var Core = (function(){
                 var script = document.createElement('script');
                 script.type = 'text/javascript';
                 script.src = 'js/controllers/' + name + '.js';
+                document.getElementsByTagName('head')[0].appendChild(script);
 
                 script.onload = function(){
                     callback.apply(null, [false]);
@@ -139,6 +144,7 @@ var Core = (function(){
         }
         
         function executeController(controller, args, options){
+            console.log('load new controller');
             controller.load(function(){
                 currentController = controller;
                 controller.main(args);
@@ -149,6 +155,7 @@ var Core = (function(){
         }
 
         function call(name, args, options){
+            console.log('calling controller ' + name);
             if(options !== undefined && typeof(options) === 'function'){
                 options = options.call(null);
             }
@@ -163,7 +170,7 @@ var Core = (function(){
 
             loadController(name, function(err){
                 if(err || controllers[name] === undefined){
-                    console.error('Controller not found');
+                    console.log('Controller not found');
                     if(options.onError !== undefined && typeof(options.onError) === 'function'){
                         options.onError.call(options);
                     }
@@ -172,6 +179,7 @@ var Core = (function(){
 
                     // Unload previous controller
                     if(currentController !== null){
+                        console.log('unload previous controller')
                         currentController.unload(function(controller, args, options){
                             currentController = null;
                             executeController(controller, args, options);
@@ -186,6 +194,26 @@ var Core = (function(){
 
         return call;
     }());
+
+    core.view = function(name, options){
+        var async = options.async||true,
+            cache = options.cache||false,
+            callback = options.callback||function(){};
+
+        $.ajax({
+            type: 'GET',
+            url: 'views/' + name + '.html',
+            async: async,
+            cache: cache,
+            dataType: 'html',
+            success: function(html){
+                callback.apply(null, [html]);
+            },
+            error: function(){
+                callback.apply(null, ['']);
+            }
+        });
+    }
 
     // ---
 
