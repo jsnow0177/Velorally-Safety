@@ -14,6 +14,7 @@
         <div id="app">
 
         </div>
+        <div id="__loading_cover"></div>
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="js/consts.js"></script>
         <script type="text/javascript" src="js/jquery.min.js"></script>
@@ -22,7 +23,23 @@
         <script type="text/javascript" src="js/Core.js"></script>
         <script type="text/javascript">
         Core.onInit(function(c){
+            var loadingT = 0;
+
             c.setApplicationContainer($('#app'));
+            c.setDefault('callController', {
+                before: function(){
+                    $('#__loading_cover').show().addClass('fade');
+                },
+                after: function(){
+                    clearTimeout(loadingT);
+                    loadingT = setTimeout(function(){
+                        $('#__loading_cover').removeClass('fade');
+                        loadingT = setTimeout(function(){
+                            $('#__loading_cover').hide();
+                        }, 500);
+                    }, 500);
+                }
+            });
             c.callController('index');
         });
         </script>
