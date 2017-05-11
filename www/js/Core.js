@@ -223,6 +223,10 @@ var Core = (function(){
         });
     }
 
+    core.setDefault = function(option, options){
+        defaults[option] = options;
+    };
+
     // ---
 
     return defaultObj;
