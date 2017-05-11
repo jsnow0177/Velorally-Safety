@@ -7,6 +7,57 @@ var Core = (function(){
         core = {
 
         };
+
+    //region CController
+
+    function CController(props){
+        this._ = {
+            ondefined: (props.ondefined!==undefined&&typeof(props.ondefined)==='function')?props.ondefined:function(){},
+            onload: (props.onload!==undefined&&typeof(props.onload)==='function')?props.onload:function(next){next();},
+            onunload: (props.onunload!==undefined&&typeof(props.onunload)==='function')?props.onunload:function(next){next();},
+            main: (props.main!==undefined&&typeof(props.main)==='function')?props.main:function(){}
+        };
+    }
+
+    CController.prototype.defined = function(){
+        if(this._.ondefined !== undefined && typeof(this._.ondefined) === 'function'){
+            this._.ondefined.apply(this, []);
+        }
+    };
+
+    CController.prototype.load = function(next){
+        if(this._.onload !== undefined && typeof(this._.onload) === 'function'){
+            this._.onload.apply(this, [next]);
+        }else{
+            next();
+        }
+    };
+
+    CController.prototype.main = function(args){
+        if(args !== undefined && (Array.isArray(args) || typeof(args)!=='object')){
+            args = {
+                0: args
+            };
+        }
+
+        if(args === undefined){
+            args = {};
+        }
+
+        if(this._.main !== undefined && typeof(this._.main) === 'function'){
+            this._.main.apply(this, [args]);
+        }
+    };
+
+    CController.prototype.unload = function(next){
+        if(this._.onunload !== undefined && typeof(this._.onunload) === 'function'){
+            this._.onunload.apply(this, [next]);
+        }else{
+            next();
+        }
+    };
+
+    //endregion
     
     function onInit(callback){
         if(!initialized){
@@ -36,7 +87,10 @@ var Core = (function(){
 
     var $applicationContainer,
         controllers = {},
-        currentController = null;
+        currentController = null,
+        defaults = {
+            callController: {}
+        };
 
     /**
      * Устанавливает контейнер приложения
@@ -48,113 +102,90 @@ var Core = (function(){
     };
     
     /**
-     * Регистрирует контроллер
-     * 
-     * @param {string} name
-     * @param {Core.Controller|function} controller
+     * Определяет контроллер, если он ещё не определён
      */
-    core.registerController = function(name, controller){
+    core.defineController = function(name, controllerObj){
+        if(controllerObj === undefined || typeof(controllerObj) !== 'object'){
+            throw new Error('controllerObj must be an object');
+        }
+
         if(controllers[name] === undefined){
-            controllers[name] = (typeof(controller) === 'function')?controller.apply(null, [core]):controller;
-            controllers[name].getName = function(name){
-                return name;
-            };
-            controllers[name].getName = controllers[name].getName.bind(null, name);
+            controllers[name] = new CController(controllerObj);
+
+            setTimeout(function(controller){
+                controller.defined();
+            }.bind(null, controllers[name]), 1);
         }
     };
 
-    /**
-     * Загружает контроллер
-     * 
-     * @param {string} name
-     */
-    core.load = function(name, options){
-        if(options === undefined || typeof(options) !== 'object'){
-            options = {};
+    core.callController = (function(){
+
+        function loadController(name, callback){
+            if(controllers[name] === undefined){
+                var script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.src = 'js/controllers/' + name + '.js';
+
+                script.onload = function(){
+                    callback.apply(null, [false]);
+                };
+
+                script.onerror = function(){
+                    callback.apply(null, [true]);
+                };
+            }else{
+                callback.apply(null, [false]);
+            }
         }
         
-        if(currentController !== null && currentController.getName() === name){
-            return false;
+        function executeController(controller, args, options){
+            controller.load(function(){
+                currentController = controller;
+                controller.main(args);
+                if(options.after !== undefined && typeof(options.after) === 'function'){
+                    options.after.call(options);
+                }
+            });
         }
 
-        var load = function(name, options){
-            var controller = null;
+        function call(name, args, options){
+            if(options !== undefined && typeof(options) === 'function'){
+                options = options.call(null);
+            }
 
-            if(controllers[name] === undefined){
-                // Загружаем контроллер
-                try{
-                    var script = document.createElement('script');
-                    script.id = '_controller_script__' + name;
-                    script.type = 'text/javascript';
-                    script.src = 'js/controllers/' + name + '.js';
-                    $('head').append(script);
-                }catch(error){
-                    // Не удалось загрузить контроллер
+            if(options === undefined || typeof(options) !== 'object'){
+                options = defaults.callController;
+            }
+
+            if(options.before !== undefined && typeof(options.before) === 'function'){
+                options.before.call(options);
+            }
+
+            loadController(name, function(err){
+                if(err || controllers[name] === undefined){
+                    console.error('Controller not found');
                     if(options.onError !== undefined && typeof(options.onError) === 'function'){
-                        options.onError.apply(null, [error]);
+                        options.onError.call(options);
                     }
-
-                    return false;
-                }
-            }
-            
-            controller = controllers[name];
-
-            var _load = function(name, options, controller){
-                currentController = null;
-                if(controller !== null){
-                    var continueLoading = function(name, options, controller){
-                        currentController = controller;
-                        if(controller.init !== undefined && typeof(controller.init) === 'function'){
-                            controller.init.apply(controller, []);
-                        }
-                        
-                        if(options.after !== undefined && typeof(options.after) === 'function'){
-                            options.after.apply(null, []);
-                        }
-                    }
-                    continueLoading = continueLoading.bind(core, name, options, controller);
-
-                    if(controller.before !== undefined && typeof(controller.before) === 'function'){
-                        controller.before.apply(controller, [name, core, continueLoading]);
-                    }else{
-                        continueLoading();
-                    }
-                }
-            }
-            _load = _load.bind(core, name, options, controller);
-
-            if(currentController !== null){
-                if(currentController.unload !== undefined && typeof(currentController.unload) === 'function'){
-                    currentController.unload.apply(currentController, [core, _load]);
                 }else{
-                    _load();
-                }
-            }else{
-                _load();
-            }
-        }
-        load = load.bind(core, name, options);
+                    var controller = controllers[name];
 
-        if(options.before !== undefined && typeof(options.before) === 'function'){
-            options.before.apply(null, [load]);
-        }else{
-            load();
-        }
-    };
-
-    core.view = function(file, onload){
-        $.ajax({
-            type: 'GET',
-            url: 'views/' + file + '.html',
-            success: function(html){
-                $applicationContainer.html(html);
-                if(onload !== undefined && typeof(onload) === 'function'){
-                    onload();
+                    // Unload previous controller
+                    if(currentController !== null){
+                        currentController.unload(function(controller, args, options){
+                            currentController = null;
+                            executeController(controller, args, options);
+                        }.bind(null, controller, args, options));
+                    }else{
+                        currentController = null;
+                        executeController(controller, args, options);
+                    }
                 }
-            }
-        });
-    }
+            });
+        };
+
+        return call;
+    }());
 
     // ---
 
