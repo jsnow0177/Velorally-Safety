@@ -2,7 +2,7 @@ function request(route, params, onSuccess, onError){
 
     $.ajax({
         type: 'POST',
-        url: VLR_HLPR_URL + '/?_r=' + route,
+        url: 'http://100.velorally.ua/?_r=' + route,
         data: params,
         cache: false,
         success: function(response){
