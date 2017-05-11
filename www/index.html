@@ -23,18 +23,7 @@
         <script type="text/javascript">
         Core.onInit(function(c){
             c.setApplicationContainer($('#app'));
-            c.load('index', {
-                before: function(load){
-                    console.log('before loading controller');
-                    load();
-                },
-                after: function(){
-                    console.log('after loading controller');
-                },
-                onError: function(err){
-                    console.log('Error while loading controller; Error: ' + err.message);
-                }
-            });
+            c.callController('index');
         });
         </script>
     </body>
