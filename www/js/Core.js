@@ -207,10 +207,12 @@ var Core = (function(){
             cache: cache,
             dataType: 'html',
             success: function(html){
-                callback.apply(null, [html]);
+                $applicationContainer.html(html);
+                callback();
             },
             error: function(){
-                callback.apply(null, ['']);
+                $applicationContainer.html('');
+                callback();    
             }
         });
     }
