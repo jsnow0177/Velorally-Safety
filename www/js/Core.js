@@ -196,6 +196,12 @@ var Core = (function(){
     }());
 
     core.view = function(name, options){
+        if(options !== undefined && typeof(options) === 'function'){
+            options = {
+                callback: options
+            };
+        }
+
         var async = options.async||true,
             cache = options.cache||false,
             callback = options.callback||function(){};
