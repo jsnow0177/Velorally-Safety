@@ -1,4 +1,4 @@
-Core.registerController('index', function(){
+Core.defineController('index', function(){
 
     var phone = '', number = '';
 
@@ -44,48 +44,47 @@ Core.registerController('index', function(){
     }
 
     return {
-        before: function(name, c, continueLoading){
+        onload: function(next){
             // Check storage
             phone  = window.localStorage.getItem('participant_phone');
             number = window.localStorage.getItem('participant_number');
-
-            if(phone !== null && number !== null){
-                // Load next controller
-                Core.load('main');
-            }else{
-                phone = (phone===null)?'':phone;
-                number = (number===null)?'':number;
-                continueLoading();
-            }
+            
+            phone = (phone===null)?'':phone;
+            number = (number===null)?'':number;
+            next();
         },
-        init: function(){
-            Core.view('index', function(){
-                var $phone   = $('#input-phone'),
-                    $number  = $('#input-number'),
-                    $nextBtn = $('#next-btn');
+        main: function(args){
+            if(phone !== null && number !== null && (args.force === undefined || args.force !== true)){
+                Core.callController('main');
+            }else{
+                Core.view('index', function(){
+                    var $phone   = $('#input-phone'),
+                        $number  = $('#input-number'),
+                        $nextBtn = $('#next-btn');
 
-                $phone.val(phone);
-                $number.val(number);
+                    $phone.val(phone);
+                    $number.val(number);
 
-                $nextBtn.on('click', function(){
-                    $nextBtn.text('Далее...');
-                    $nextBtn.attr('disabled', 'disabled');
+                    $nextBtn.on('click', function(){
+                        $nextBtn.text('Далее...');
+                        $nextBtn.attr('disabled', 'disabled');
 
-                    var hasError = !validateInputs($phone, $number);
-                    
-                    if(!hasError){
-                        // Save phone and number
-                        window.localStorage.setItem('participant_phone', $phone.val());
-                        window.localStorage.setItem('participant_number', $number.val());
+                        var hasError = !validateInputs($phone, $number);
+                        
+                        if(!hasError){
+                            // Save phone and number
+                            window.localStorage.setItem('participant_phone', $phone.val());
+                            window.localStorage.setItem('participant_number', $number.val());
 
-                        // Navigate to next controller
-                        Core.load('main');
-                    }else{
-                        $nextBtn.text('Далее');
-                        $nextBtn.attr('disabled', '');
-                    }
+                            // Navigate to next controller
+                            Core.callController('main');
+                        }else{
+                            $nextBtn.text('Далее');
+                            $nextBtn.attr('disabled', '');
+                        }
+                    });
                 });
-            });
+            }
         }
     };
 

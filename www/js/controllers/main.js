@@ -1,7 +1,7 @@
-Core.registerController('main', function(){
+Core.defineController('main', function(){
 
     return {
-        init: function(){
+        main: function(){
             Core.view('main', function(){
                 
             });
