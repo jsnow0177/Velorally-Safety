@@ -1,7 +1,6 @@
 Core.defineController('main', function(){
 
-    var PING_TIMEOUT = 1000,
-        ping_t = -1;
+    var ping_t = -1;
 
     function onOnline(){
         console.log('on online');
@@ -30,13 +29,13 @@ Core.defineController('main', function(){
         if(response !== undefined){
             if(response === 'ok'){
                 onPingServerResponseOk();
-                ping_t = setTimeout(ping, PING_TIMEOUT);
+                ping_t = setTimeout(ping, VLR_HLPR_PING_TIMEOUT);
                 return;
            }
         }
 
         onPingServerResponseFail();
-        ping_t = setTimeout(ping, PING_TIMEOUT);
+        ping_t = setTimeout(ping, VLR_HLPR_PING_TIMEOUT);
         return;
     }
 
