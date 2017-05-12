@@ -55,7 +55,7 @@ Core.defineController('index', function(){
         },
         main: function(args){
             if(phone !== '' && number !== '' && (args.force === undefined || args.force !== true)){
-                Core.callController('main');
+                Core.callController('main', {number: number, phone: phone});
             }else{
                 Core.view('index', function(){
                     var $phone   = $('#input-phone'),
@@ -77,7 +77,7 @@ Core.defineController('index', function(){
                             window.localStorage.setItem('participant_number', $number.val());
 
                             // Navigate to next controller
-                            Core.callController('main');
+                            Core.callController('main', {number: $number.val(), phone: $phone.val()});
                         }else{
                             $nextBtn.text('Далее');
                             $nextBtn.attr('disabled', '');
