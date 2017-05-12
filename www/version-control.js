@@ -1,6 +1,6 @@
 var VersionControl = (function(){
 
-    var APP_VERSION = '1.1.5';
+    var APP_VERSION = '2.0.0';
 
     function checkUpdate(callback){
         request('update/check', {version: APP_VERSION}, function(result){
