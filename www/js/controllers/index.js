@@ -54,7 +54,7 @@ Core.defineController('index', function(){
             next();
         },
         main: function(args){
-            if(phone !== null && number !== null && (args.force === undefined || args.force !== true)){
+            if(phone !== '' && number !== '' && (args.force === undefined || args.force !== true)){
                 Core.callController('main');
             }else{
                 Core.view('index', function(){
