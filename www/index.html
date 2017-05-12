@@ -19,10 +19,28 @@
         <script type="text/javascript" src="js/consts.js"></script>
         <script type="text/javascript" src="js/jquery.min.js"></script>
         <script type="text/javascript" src="js/request.js"></script>
+        <script type="text/javascript" src="version-control.js"></script>
         <script type="text/javascript" src="js/bootstrap.min.js"></script>
         <script type="text/javascript" src="js/Core.js"></script>
         <script type="text/javascript">
         Core.onInit(function(c){
+            // Проверка версии
+
+            function checkUpdate(){
+                VersionControl.checkUpdate(function(err, res){
+                    if(err || res.new === undefined){
+                        setTimeout(checkUpdate, VLR_HLPR_UPDATE_CHECK_TIMEOUT);
+                    }else{
+                        // Показываем уведомление о наличии обновления
+                        navigator.notification.alert('Доступна новая версия приложения: ' + res.version + '\n' + (res.description?res.description:''), function(){}, 'Новая версия Velorally Safety', 'OK');
+                    }
+                });
+            }
+
+            checkUpdate();
+
+            // ---
+
             var loadingT = 0;
 
             c.setApplicationContainer($('#app'));
